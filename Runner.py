@@ -87,7 +87,7 @@ class Job:
             "file": file,
             "apath": apath,
             "failed": onfailure,
-            "success": onfailure,
+            "success": onsuccess,
             })
 
 
@@ -160,26 +160,15 @@ class Job:
 
             data = b.getvalue()
 
-            boundary = b"OoOoO"
-            while boundary in data:
-                boundary += b"oO"
-
-            fulldata = (
-                        b'--' + boundary + b'\n' +
-                        b'Content-Disposition: form-data; name="file"; filename="artifacts.zip"\n' +
-                        b'Content-Type: application/octet-stream\n' +
-                        data + b'\n' +
-                        b'--' + boundary + b'--')
-            print(f"meow: {fulldata} endmeow")
-
             r = requests.request(
                     method='POST',
                     url=c.url + "/api/v4/" + f"jobs/{self.id}/artifacts?artifact_format=zip&artifact_type=archive",
                     headers={
                         "Job-Token": self.token,
-                        "Content-Type": f"multipart/form-data; boundary={boundary.decode()}",
                         },
-                    data=fulldata,
+                    files={
+                        "file": ("artifacts.zip", data, "application/octet-stream")
+                        },
                     )
 
             if not r.ok:
